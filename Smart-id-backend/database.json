@@ -1,0 +1,23 @@
+{
+  "cup": {
+    "name": "Ceramic Cup",
+    "category": "Kitchenware",
+    "description": "A small bowl-shaped container for drinking.",
+    "safety_warning": "Caution: May be hot if containing hot liquids.",
+    "similar_items": ["bottle", "wine glass", "bowl"]
+  },
+  "laptop": {
+    "name": "Laptop Computer",
+    "category": "Electronics",
+    "description": "A portable personal computer.",
+    "safety_warning": "Keep away from liquids.",
+    "similar_items": ["keyboard", "mouse", "tv"]
+  },
+  "cell phone": {
+    "name": "Smartphone",
+    "category": "Electronics",
+    "description": "A portable device for communication and computing.",
+    "safety_warning": "Do not leave charging overnight.",
+    "similar_items": ["laptop", "tablet"]
+  }
+}

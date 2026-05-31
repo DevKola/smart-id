@@ -1,0 +1,10 @@
+# Python Backend Ignores
+smart-id-backend/venv/
+smart-id-backend/__pycache__/
+*.pt 
+
+# React Native Frontend Ignores
+SmartIDMobile/node_modules/
+SmartIDMobile/android/app/build/
+SmartIDMobile/android/.gradle/
+.env
