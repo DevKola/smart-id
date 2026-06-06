@@ -10,6 +10,7 @@ import {
   Image,
   ScrollView,
   RefreshControl,
+  Platform,
 } from 'react-native';
 import {
   Camera,
@@ -72,9 +73,9 @@ export default function App(): React.JSX.Element {
   // WebSocket Connection Management
   useEffect(() => {
     const connectWs = () => {
-      // Use localhost for iOS simulator, 10.0.2.2 for Android emulator
-      // For a real device, use your computer's local IP (e.g. 192.168.1.X)
-      const wsUrl = 'ws://localhost:8000/ws/scan'; 
+      // Android Emulator uses 10.0.2.2 to point to the host machine's localhost
+      const backendHost = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
+      const wsUrl = `ws://${backendHost}:8000/ws/scan`; 
       ws.current = new WebSocket(wsUrl);
 
       ws.current.onopen = () => {
@@ -137,7 +138,8 @@ export default function App(): React.JSX.Element {
   const sendUriToBackend = async (uri: string) => {
     try {
        console.log('Sending via HTTP POST...');
-       const response = await fetch('http://localhost:8000/scan/', {
+       const backendHost = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
+       const response = await fetch(`http://${backendHost}:8000/scan/`, {
          method: 'POST',
          body: createFormData(uri)
        });
