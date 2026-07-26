@@ -36,6 +36,10 @@ const BACKEND_WS_URL  = IS_PRODUCTION
 const BACKEND_HTTP_URL = IS_PRODUCTION
   ? `https://${PRODUCTION_URL}/scan/`
   : `http://${LOCAL_HOST}:${LOCAL_PORT}/scan/`;
+
+const BACKEND_ROOT_URL = IS_PRODUCTION
+  ? `https://${PRODUCTION_URL}/`
+  : `http://${LOCAL_HOST}:${LOCAL_PORT}/`;
 // ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -86,6 +90,7 @@ export default function App(): React.JSX.Element {
   const [wsConnected, setWsConnected] = useState<boolean>(false);
   const [snapImageUri, setSnapImageUri] = useState<string | null>(null);
   const [isSnapping, setIsSnapping] = useState<boolean>(false);
+  const [isSendingSnap, setIsSendingSnap] = useState<boolean>(false);
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
   const ws = useRef<WebSocket | null>(null);
@@ -180,26 +185,29 @@ export default function App(): React.JSX.Element {
 
   const sendSnapToBackend = async (uri: string) => {
     try {
-      console.log('Sending snap via WebSocket...');
-      const fetchUri = uri.startsWith('file://') ? uri : `file://${uri}`;
-      const res = await fetch(fetchUri);
-      const blob = await res.blob();
+      setIsSendingSnap(true);
+      console.log('Waking up backend server...');
+      // First ping the root to wake Render from sleep (free tier cold start)
+      try { await fetch(BACKEND_ROOT_URL, { method: 'GET' }); } catch (_) {}
 
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64data = reader.result as string;
-        const base64String = base64data.split(',')[1];
-        
-        if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-          ws.current.send(base64String);
-          console.log('Snap sent to backend over WebSocket!');
-        } else {
-          console.log('WebSocket not connected. Unable to send snap.');
-        }
-      };
-      reader.readAsDataURL(blob);
+      console.log('Sending snap via HTTP POST...');
+      const formData = new FormData();
+      formData.append('file', {
+        uri,
+        type: 'image/jpeg',
+        name: 'snap_image.jpg',
+      } as any);
+
+      const response = await fetch(BACKEND_HTTP_URL, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await response.json();
+      setResultData(data);
     } catch (err) {
-      console.log('Failed to send snap over WebSocket', err);
+      console.log('Failed to send snap over HTTP POST', err);
+    } finally {
+      setIsSendingSnap(false);
     }
   };
 
@@ -372,6 +380,13 @@ export default function App(): React.JSX.Element {
         </Svg>
       )}
 
+      {isSendingSnap && (
+        <View style={styles.analyzingOverlay}>
+          <ActivityIndicator size="large" color="#a855f7" />
+          <Text style={styles.analyzingText}>Analyzing...</Text>
+        </View>
+      )}
+
       <View style={styles.headerContainer}>
         <Text style={styles.headerText}>{snapImageUri ? 'SNAP MODE' : 'SMART ID AR'}</Text>
         <View style={styles.statusPill}>
@@ -482,6 +497,20 @@ export default function App(): React.JSX.Element {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000', justifyContent: 'center' },
+  analyzingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  analyzingText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '700',
+    marginTop: 14,
+    letterSpacing: 2,
+  },
   text: { color: '#f3f4f6', textAlign: 'center', fontSize: 16, marginTop: 15 },
   headerContainer: {
     position: 'absolute',
