@@ -1,0 +1,12 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# YOLO output
+runs/
+
+# macOS
+.DS_Store

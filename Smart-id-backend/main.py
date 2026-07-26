@@ -6,18 +6,21 @@ import numpy as np
 import json
 import asyncio
 import base64
+import os
 
-app = FastAPI()
+app = FastAPI(title="Smart ID Backend")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], 
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"], 
-    allow_headers=["*"], 
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-model = YOLO('yolov8n.pt')
+# Auto-download yolov8n.pt if not present (e.g. on Render's ephemeral filesystem)
+MODEL_PATH = "yolov8n.pt"
+model = YOLO(MODEL_PATH)  # ultralytics will auto-download if the file is missing
 
 with open('database.json', 'r') as f:
     item_database = json.load(f)

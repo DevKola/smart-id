@@ -10,7 +10,6 @@ import {
   Image,
   ScrollView,
   RefreshControl,
-  Platform,
 } from 'react-native';
 import {
   Camera,
@@ -18,7 +17,24 @@ import {
   useCameraPermission,
 } from 'react-native-vision-camera';
 import Svg, { Rect, Text as SvgText } from 'react-native-svg';
-import { launchImageLibrary } from 'react-native-image-picker';
+// ─── Backend Configuration ───────────────────────────────────────────────────
+// 🔧 LOCAL DEV:  set IS_PRODUCTION = false, use your machine IP on the same WiFi
+// 🚀 PRODUCTION: set IS_PRODUCTION = true, then paste your Render URL below
+const IS_PRODUCTION = false;
+
+const PRODUCTION_URL = 'smart-id-backend.onrender.com'; // ← Replace with your Render URL after deploying
+const LOCAL_HOST     = '192.168.1.100';                 // ← Replace with your machine's local IP (run `ifconfig`)
+const LOCAL_PORT     = '8000';
+
+const BACKEND_WS_URL  = IS_PRODUCTION
+  ? `wss://${PRODUCTION_URL}/ws/scan`
+  : `ws://${LOCAL_HOST}:${LOCAL_PORT}/ws/scan`;
+
+const BACKEND_HTTP_URL = IS_PRODUCTION
+  ? `https://${PRODUCTION_URL}/scan/`
+  : `http://${LOCAL_HOST}:${LOCAL_PORT}/scan/`;
+// ─────────────────────────────────────────────────────────────────────────────
+
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -56,7 +72,8 @@ export default function App(): React.JSX.Element {
   const [isLiveScanning, setIsLiveScanning] = useState<boolean>(false);
   const [resultData, setResultData] = useState<ServerResponse | null>(null);
   const [wsConnected, setWsConnected] = useState<boolean>(false);
-  const [testImageUri, setTestImageUri] = useState<string | null>(null);
+  const [snapImageUri, setSnapImageUri] = useState<string | null>(null);
+  const [isSnapping, setIsSnapping] = useState<boolean>(false);
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
   const ws = useRef<WebSocket | null>(null);
@@ -73,9 +90,7 @@ export default function App(): React.JSX.Element {
   // WebSocket Connection Management
   useEffect(() => {
     const connectWs = () => {
-      // Android Emulator uses 10.0.2.2 to point to the host machine's localhost
-      const backendHost = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
-      const wsUrl = `ws://${backendHost}:8000/ws/scan`; 
+      const wsUrl = BACKEND_WS_URL;
       ws.current = new WebSocket(wsUrl);
 
       ws.current.onopen = () => {
@@ -116,68 +131,76 @@ export default function App(): React.JSX.Element {
         ws.current.close();
       }
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ---- TEST MODE: IMAGE UPLOAD ----
-  const pickTestImage = async () => {
+  // ---- SNAP MODE: Capture a single photo with the device camera ----
+  const snapPhoto = async () => {
+    if (!camera.current || !device) return;
+
     // Stop live scanning if it was running
     setIsLiveScanning(false);
     isScanningRef.current = false;
     setResultData(null);
+    setIsSnapping(true);
 
-    const result = await launchImageLibrary({ mediaType: 'photo', quality: 1 });
-    if (result.assets && result.assets.length > 0) {
-      const uri = result.assets[0].uri;
-      if (uri) {
-        setTestImageUri(uri);
-        sendUriToBackend(uri);
-      }
-    }
-  };
-
-  const sendUriToBackend = async (uri: string) => {
     try {
-       console.log('Sending via HTTP POST...');
-       const backendHost = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
-       const response = await fetch(`http://${backendHost}:8000/scan/`, {
-         method: 'POST',
-         body: createFormData(uri)
-       });
-       const data = await response.json();
-       setResultData(data);
+      const photo = await camera.current.takePhoto({
+        qualityPrioritization: 'quality',
+        flash: 'off',
+      });
+
+      const uri = photo.path.startsWith('file://')
+        ? photo.path
+        : `file://${photo.path}`;
+
+      setSnapImageUri(uri);
+      await sendSnapToBackend(uri);
     } catch (err) {
-      console.log('Failed to send test image', err);
+      console.log('Snap failed', err);
+    } finally {
+      setIsSnapping(false);
     }
   };
 
-  const createFormData = (uri: string) => {
-    const data = new FormData();
-    data.append('file', {
-      uri: uri,
-      type: 'image/jpeg',
-      name: 'test_image.jpg',
-    } as any);
-    return data;
+  const sendSnapToBackend = async (uri: string) => {
+    try {
+      console.log('Sending snap via HTTP POST...');
+      const formData = new FormData();
+      formData.append('file', {
+        uri,
+        type: 'image/jpeg',
+        name: 'snap_image.jpg',
+      } as any);
+
+      const response = await fetch(BACKEND_HTTP_URL, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await response.json();
+      setResultData(data);
+    } catch (err) {
+      console.log('Failed to send snap', err);
+    }
   };
 
-  const clearTestImage = () => {
-    setTestImageUri(null);
+  const clearSnap = () => {
+    setSnapImageUri(null);
     setResultData(null);
   };
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
-    // Reset all states
-    clearTestImage();
+    clearSnap();
     setIsLiveScanning(false);
     isScanningRef.current = false;
-    
+
     // Simulate a brief delay to show the refresh spinner
     setTimeout(() => {
       setRefreshing(false);
     }, 800);
   }, []);
-  // ---------------------------------
+  // -------------------------------------------------------------------
 
   const captureAndSendFrame = async () => {
     if (!camera.current || !ws.current || ws.current.readyState !== WebSocket.OPEN || !isScanningRef.current) {
@@ -214,7 +237,7 @@ export default function App(): React.JSX.Element {
   };
 
   const toggleScanning = () => {
-    if (testImageUri) clearTestImage(); // Clear test image to resume live AR
+    if (snapImageUri) clearSnap(); // Clear snap to resume live AR
     const newState = !isLiveScanning;
     setIsLiveScanning(newState);
     isScanningRef.current = newState;
@@ -256,14 +279,14 @@ export default function App(): React.JSX.Element {
     );
   }
 
-  // If no device AND no test image is picked, show the test mode screen
-  if (device == null && !testImageUri) {
+  // No physical camera detected (e.g. simulator)
+  if (device == null) {
     return (
       <View style={styles.container}>
-        <Text style={styles.text}>No Camera Detected on Simulator</Text>
-        <TouchableOpacity style={styles.uploadButton} onPress={pickTestImage}>
-          <Text style={styles.uploadButtonText}>Upload Image to Test AI</Text>
-        </TouchableOpacity>
+        <Text style={styles.text}>No Camera Detected on this Device</Text>
+        <Text style={styles.subText}>
+          A physical device with a camera is required to use Snap mode.
+        </Text>
       </View>
     );
   }
@@ -281,16 +304,15 @@ export default function App(): React.JSX.Element {
         />
       }
     >
-      {/* Background layer: Either the test image OR the live camera feed */}
-      {testImageUri ? (
-        <Image source={{ uri: testImageUri }} style={StyleSheet.absoluteFill} resizeMode="contain" />
+      {/* Background layer: Either the snapped image OR the live camera feed */}
+      {snapImageUri ? (
+        <Image source={{ uri: snapImageUri }} style={StyleSheet.absoluteFill} resizeMode="contain" />
       ) : (
         <Camera
           ref={camera}
           style={StyleSheet.absoluteFill}
-          device={device!}
+          device={device}
           isActive={true}
-          photo={true}
         />
       )}
 
@@ -331,34 +353,41 @@ export default function App(): React.JSX.Element {
       )}
 
       <View style={styles.headerContainer}>
-        <Text style={styles.headerText}>{testImageUri ? "TEST MODE" : "SMART ID AR"}</Text>
+        <Text style={styles.headerText}>{snapImageUri ? 'SNAP MODE' : 'SMART ID AR'}</Text>
         <View style={styles.statusPill}>
-          <View style={[styles.statusDot, { backgroundColor: wsConnected ? '#22c55e' : '#ef4444' }]} />
+          <View style={[styles.statusDot, wsConnected ? styles.statusDotConnected : styles.statusDotDisconnected]} />
           <Text style={styles.statusText}>{wsConnected ? 'Connected' : 'Disconnected'}</Text>
         </View>
       </View>
 
       <View style={styles.buttonContainer}>
-         <TouchableOpacity style={styles.uploadButtonSmall} onPress={pickTestImage}>
-          <Text style={styles.uploadButtonTextSmall}>Upload Photo</Text>
+        {/* Snap Photo button — capture with the device camera */}
+        <TouchableOpacity
+          style={[styles.snapButton, isSnapping && styles.snapButtonActive]}
+          onPress={snapPhoto}
+          disabled={isSnapping || isLiveScanning}
+        >
+          {isSnapping ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Text style={styles.snapButtonText}>
+              {snapImageUri ? '🔄 Retake' : '📷 Snap Photo'}
+            </Text>
+          )}
         </TouchableOpacity>
 
-        {/* Hide live scan button if on simulator and no camera exists */}
-        {device && (
-          <TouchableOpacity
-            style={[styles.captureButton, isLiveScanning && styles.captureButtonActive]}
-            onPress={toggleScanning}
-            disabled={!wsConnected && !testImageUri}
-          >
-            <View style={[styles.innerCaptureCircle, isLiveScanning && styles.innerCaptureCircleActive]} />
-          </TouchableOpacity>
-        )}
-        
-        {device && (
-          <Text style={styles.instructionText}>
-            {isLiveScanning ? 'Tap to Stop Live AR' : 'Tap to Start Live AR'}
-          </Text>
-        )}
+        {/* Live AR scan button */}
+        <TouchableOpacity
+          style={[styles.captureButton, isLiveScanning && styles.captureButtonActive]}
+          onPress={toggleScanning}
+          disabled={!wsConnected}
+        >
+          <View style={[styles.innerCaptureCircle, isLiveScanning && styles.innerCaptureCircleActive]} />
+        </TouchableOpacity>
+
+        <Text style={styles.instructionText}>
+          {isLiveScanning ? 'Tap to Stop Live AR' : 'Tap to Start Live AR'}
+        </Text>
       </View>
 
       {/* The Animated Bottom Sheet */}
@@ -452,6 +481,12 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     marginRight: 6,
   },
+  statusDotConnected: {
+    backgroundColor: '#22c55e',
+  },
+  statusDotDisconnected: {
+    backgroundColor: '#ef4444',
+  },
   statusText: {
     color: '#fff',
     fontSize: 12,
@@ -466,29 +501,31 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     gap: 15,
   },
-  uploadButton: {
-    backgroundColor: '#a855f7',
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    borderRadius: 30,
-    marginTop: 20,
-    alignSelf: 'center',
+  subText: {
+    color: '#9ca3af',
+    textAlign: 'center',
+    fontSize: 13,
+    marginTop: 8,
+    paddingHorizontal: 40,
   },
-  uploadButtonText: {
+  snapButton: {
+    backgroundColor: 'rgba(168, 85, 247, 0.85)',
+    paddingVertical: 12,
+    paddingHorizontal: 28,
+    borderRadius: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.25)',
+  },
+  snapButtonActive: {
+    backgroundColor: 'rgba(168, 85, 247, 0.5)',
+  },
+  snapButtonText: {
     color: '#fff',
     fontWeight: 'bold',
-    fontSize: 16,
-  },
-  uploadButtonSmall: {
-    backgroundColor: 'rgba(168, 85, 247, 0.8)',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-  },
-  uploadButtonTextSmall: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 14,
+    fontSize: 15,
   },
   instructionText: {
     color: '#fff',
