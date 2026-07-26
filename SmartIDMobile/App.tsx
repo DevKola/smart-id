@@ -15,8 +15,11 @@ import {
   Camera,
   useCameraDevice,
   useCameraPermission,
+  usePhotoOutput,
+  CommonResolutions,
 } from 'react-native-vision-camera';
 import Svg, { Rect, Text as SvgText } from 'react-native-svg';
+import { Camera as CameraIcon, RefreshCcw, SwitchCamera, AlertTriangle } from 'lucide-react-native';
 // ─── Backend Configuration ───────────────────────────────────────────────────
 // 🔧 LOCAL DEV:  set IS_PRODUCTION = false, use your machine IP on the same WiFi
 // 🚀 PRODUCTION: set IS_PRODUCTION = true, then paste your Render URL below
@@ -66,8 +69,17 @@ interface ServerResponse {
 }
 
 export default function App(): React.JSX.Element {
-  const device = useCameraDevice('back');
+  const [cameraPosition, setCameraPosition] = useState<'back' | 'front'>('back');
+  const device = useCameraDevice(cameraPosition);
   const camera = useRef<Camera>(null);
+  
+  // Set resolution to VGA (640x480) because YOLO runs at 640. 
+  // High res crashes WebSockets with huge base64 payloads!
+  const photoOutput = usePhotoOutput({
+    targetResolution: CommonResolutions.VGA_4_3,
+    quality: 0.6,
+  });
+  
   const { hasPermission, requestPermission } = useCameraPermission();
   const [isLiveScanning, setIsLiveScanning] = useState<boolean>(false);
   const [resultData, setResultData] = useState<ServerResponse | null>(null);
@@ -135,6 +147,10 @@ export default function App(): React.JSX.Element {
   }, []);
 
   // ---- SNAP MODE: Capture a single photo with the device camera ----
+  const toggleCameraPosition = () => {
+    setCameraPosition((prev) => (prev === 'back' ? 'front' : 'back'));
+  };
+
   const snapPhoto = async () => {
     if (!camera.current || !device) return;
 
@@ -145,14 +161,13 @@ export default function App(): React.JSX.Element {
     setIsSnapping(true);
 
     try {
-      const photo = await camera.current.takePhoto({
-        qualityPrioritization: 'quality',
-        flash: 'off',
-      });
+      const photo = await photoOutput.capturePhoto({ flash: 'off' }, {});
+      const path = await photo.saveToTemporaryFileAsync();
+      photo.dispose();
 
-      const uri = photo.path.startsWith('file://')
-        ? photo.path
-        : `file://${photo.path}`;
+      const uri = path.startsWith('file://')
+        ? path
+        : `file://${path}`;
 
       setSnapImageUri(uri);
       await sendSnapToBackend(uri);
@@ -165,23 +180,26 @@ export default function App(): React.JSX.Element {
 
   const sendSnapToBackend = async (uri: string) => {
     try {
-      console.log('Sending snap via HTTP POST...');
-      const formData = new FormData();
-      formData.append('file', {
-        uri,
-        type: 'image/jpeg',
-        name: 'snap_image.jpg',
-      } as any);
+      console.log('Sending snap via WebSocket...');
+      const fetchUri = uri.startsWith('file://') ? uri : `file://${uri}`;
+      const res = await fetch(fetchUri);
+      const blob = await res.blob();
 
-      const response = await fetch(BACKEND_HTTP_URL, {
-
-        method: 'POST',
-        body: formData,
-      });
-      const data = await response.json();
-      setResultData(data);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64data = reader.result as string;
+        const base64String = base64data.split(',')[1];
+        
+        if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+          ws.current.send(base64String);
+          console.log('Snap sent to backend over WebSocket!');
+        } else {
+          console.log('WebSocket not connected. Unable to send snap.');
+        }
+      };
+      reader.readAsDataURL(blob);
     } catch (err) {
-      console.log('Failed to send snap', err);
+      console.log('Failed to send snap over WebSocket', err);
     }
   };
 
@@ -209,13 +227,12 @@ export default function App(): React.JSX.Element {
     }
 
     try {
-      const photo = await camera.current.takePhoto({
-        qualityPrioritization: 'speed',
-        flash: 'off',
-      });
+      const photo = await photoOutput.capturePhoto({ flash: 'off' }, {});
+      const path = await photo.saveToTemporaryFileAsync();
+      photo.dispose();
 
       // Read photo as blob and convert to Base64
-      const fetchUri = photo.path.startsWith('file://') ? photo.path : `file://${photo.path}`;
+      const fetchUri = path.startsWith('file://') ? path : `file://${path}`;
       const res = await fetch(fetchUri);
       const blob = await res.blob();
       
@@ -314,6 +331,8 @@ export default function App(): React.JSX.Element {
           style={StyleSheet.absoluteFill}
           device={device}
           isActive={true}
+          photo={true}
+          outputs={[photoOutput]}
         />
       )}
 
@@ -361,19 +380,28 @@ export default function App(): React.JSX.Element {
         </View>
       </View>
 
+      {!snapImageUri && (
+        <TouchableOpacity style={styles.flipButton} onPress={toggleCameraPosition}>
+          <SwitchCamera color="#fff" size={24} />
+        </TouchableOpacity>
+      )}
+
       <View style={styles.buttonContainer}>
         {/* Snap Photo button — capture with the device camera */}
         <TouchableOpacity
           style={[styles.snapButton, isSnapping && styles.snapButtonActive]}
-          onPress={snapPhoto}
+          onPress={snapImageUri ? clearSnap : snapPhoto}
           disabled={isSnapping || isLiveScanning}
         >
           {isSnapping ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
-            <Text style={styles.snapButtonText}>
-              {snapImageUri ? '🔄 Retake' : '📷 Snap Photo'}
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              {snapImageUri ? <RefreshCcw color="#fff" size={20} /> : <CameraIcon color="#fff" size={20} />}
+              <Text style={styles.snapButtonText}>
+                {snapImageUri ? 'Retake' : 'Snap Photo'}
+              </Text>
+            </View>
           )}
         </TouchableOpacity>
 
@@ -409,9 +437,12 @@ export default function App(): React.JSX.Element {
                     <View style={styles.infoContainer}>
                       {resultData.information.safety_warning && (
                         <View style={styles.warningBox}>
-                          <Text style={styles.warningHeading}>
-                            ⚠️ SAFETY PROTOCOL
-                          </Text>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                            <AlertTriangle color="#b91c1c" size={16} />
+                            <Text style={[styles.warningHeading, { marginBottom: 0 }]}>
+                              SAFETY PROTOCOL
+                            </Text>
+                          </View>
                           <Text style={styles.warningText}>
                             {resultData.information.safety_warning}
                           </Text>
@@ -467,6 +498,20 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0,0,0,0.5)',
     textShadowRadius: 10,
     marginBottom: 8,
+  },
+  flipButton: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  flipButtonText: {
+    fontSize: 20,
   },
   statusPill: {
     flexDirection: 'row',
