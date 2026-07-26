@@ -2,22 +2,520 @@
   "cup": {
     "name": "Ceramic Cup",
     "category": "Kitchenware",
-    "description": "A small bowl-shaped container for drinking.",
-    "safety_warning": "Caution: May be hot if containing hot liquids.",
+    "description": "A small bowl-shaped container for drinking hot or cold beverages.",
+    "safety_warning": "Caution: May be hot if containing hot liquids. Handle with care.",
     "similar_items": ["bottle", "wine glass", "bowl"]
   },
   "laptop": {
     "name": "Laptop Computer",
     "category": "Electronics",
-    "description": "A portable personal computer.",
-    "safety_warning": "Keep away from liquids.",
+    "description": "A portable personal computer with an integrated screen and keyboard.",
+    "safety_warning": "Keep away from liquids. Do not block ventilation vents to prevent overheating.",
     "similar_items": ["keyboard", "mouse", "tv"]
   },
   "cell phone": {
     "name": "Smartphone",
     "category": "Electronics",
-    "description": "A portable device for communication and computing.",
-    "safety_warning": "Do not leave charging overnight.",
-    "similar_items": ["laptop", "tablet"]
+    "description": "A portable communication and computing device with a touchscreen interface.",
+    "safety_warning": "Do not leave charging overnight. Avoid exposure to extreme heat.",
+    "similar_items": ["laptop", "remote"]
+  },
+  "bottle": {
+    "name": "Bottle",
+    "category": "Kitchenware",
+    "description": "A container used to store water, beverages, or liquids.",
+    "safety_warning": "Check for BPA-free label. Do not reuse single-use plastic bottles.",
+    "similar_items": ["cup", "wine glass", "bowl"]
+  },
+  "wine glass": {
+    "name": "Wine Glass",
+    "category": "Kitchenware",
+    "description": "A stemmed glass designed for drinking wine and other beverages.",
+    "safety_warning": "Fragile — handle with care. Wash gently to avoid breakage.",
+    "similar_items": ["cup", "bottle", "bowl"]
+  },
+  "fork": {
+    "name": "Fork",
+    "category": "Cutlery",
+    "description": "A utensil with prongs used for eating and serving food.",
+    "safety_warning": "Sharp prongs — keep away from young children.",
+    "similar_items": ["knife", "spoon", "bowl"]
+  },
+  "knife": {
+    "name": "Knife",
+    "category": "Cutlery",
+    "description": "A sharp bladed utensil used for cutting and preparing food.",
+    "safety_warning": "Extremely sharp — always cut away from the body. Store in a knife block or drawer guard. Keep away from children.",
+    "similar_items": ["fork", "spoon", "scissors"]
+  },
+  "spoon": {
+    "name": "Spoon",
+    "category": "Cutlery",
+    "description": "A utensil with a shallow bowl-shaped head used for eating and serving.",
+    "similar_items": ["fork", "knife", "bowl"]
+  },
+  "bowl": {
+    "name": "Bowl",
+    "category": "Kitchenware",
+    "description": "A round, deep dish used for serving food, soup, or cereals.",
+    "safety_warning": "Check if microwave-safe before heating food in it.",
+    "similar_items": ["cup", "plate", "spoon"]
+  },
+  "microwave": {
+    "name": "Microwave Oven",
+    "category": "Kitchen Appliance",
+    "description": "An electric oven that heats food using microwave radiation for quick cooking.",
+    "safety_warning": "Never use metal containers inside. Do not operate empty. Keep interior clean to prevent fire hazards.",
+    "similar_items": ["oven", "toaster", "refrigerator"]
+  },
+  "oven": {
+    "name": "Oven",
+    "category": "Kitchen Appliance",
+    "description": "A thermally insulated chamber used for baking, roasting, and heating food.",
+    "safety_warning": "Surfaces become extremely hot during use. Use oven mitts. Never leave unattended while in use.",
+    "similar_items": ["microwave", "toaster", "refrigerator"]
+  },
+  "toaster": {
+    "name": "Toaster",
+    "category": "Kitchen Appliance",
+    "description": "A small electric appliance used to brown and crisp bread slices.",
+    "safety_warning": "Never insert metallic objects. Clean crumb tray regularly to prevent fire. Unplug when not in use.",
+    "similar_items": ["microwave", "oven"]
+  },
+  "sink": {
+    "name": "Kitchen Sink",
+    "category": "Kitchen Fixture",
+    "description": "A fixed basin with a water supply and drain, used for washing dishes and hands.",
+    "safety_warning": "Ensure water temperature is regulated to avoid scalding. Keep drain clear of blockages.",
+    "similar_items": ["oven", "refrigerator", "microwave"]
+  },
+  "refrigerator": {
+    "name": "Refrigerator",
+    "category": "Kitchen Appliance",
+    "description": "A large cooling appliance used to preserve food and beverages at low temperatures.",
+    "safety_warning": "Keep door seals clean. Do not store hot food directly inside. Maintain 37-40°F (3-4°C) for food safety.",
+    "similar_items": ["microwave", "oven", "toaster"]
+  },
+  "chair": {
+    "name": "Chair",
+    "category": "Furniture",
+    "description": "A piece of furniture designed for a single person to sit on, with a back and usually four legs.",
+    "similar_items": ["couch", "bed", "dining table"]
+  },
+  "couch": {
+    "name": "Sofa / Couch",
+    "category": "Furniture",
+    "description": "A large upholstered seat designed for multiple people to sit on comfortably.",
+    "similar_items": ["chair", "bed", "potted plant"]
+  },
+  "bed": {
+    "name": "Bed",
+    "category": "Furniture",
+    "description": "A piece of furniture used for sleeping and resting, typically with a mattress and frame.",
+    "similar_items": ["couch", "chair"]
+  },
+  "dining table": {
+    "name": "Dining Table",
+    "category": "Furniture",
+    "description": "A flat-surfaced table used for dining, working, and other household activities.",
+    "similar_items": ["chair", "bowl", "fork"]
+  },
+  "toilet": {
+    "name": "Toilet",
+    "category": "Bathroom Fixture",
+    "description": "A plumbing fixture used for disposing of human waste, connected to a sewage or septic system.",
+    "safety_warning": "Keep lid closed. Use non-slip mats on bathroom floor to prevent falls.",
+    "similar_items": ["sink"]
+  },
+  "tv": {
+    "name": "Television",
+    "category": "Electronics",
+    "description": "An electronic display device used for watching broadcast content, streaming, and gaming.",
+    "safety_warning": "Keep children at a safe viewing distance. Secure large TVs to prevent tipping.",
+    "similar_items": ["laptop", "remote", "keyboard"]
+  },
+  "remote": {
+    "name": "TV Remote Control",
+    "category": "Electronics",
+    "description": "A handheld device used to wirelessly control a television or other media devices.",
+    "safety_warning": "Remove batteries if not used for extended periods to prevent leakage.",
+    "similar_items": ["tv", "cell phone"]
+  },
+  "keyboard": {
+    "name": "Computer Keyboard",
+    "category": "Electronics",
+    "description": "An input device with keys used to type text and commands into a computer.",
+    "similar_items": ["mouse", "laptop", "tv"]
+  },
+  "mouse": {
+    "name": "Computer Mouse",
+    "category": "Electronics",
+    "description": "A handheld pointing device used to interact with a computer's graphical interface.",
+    "similar_items": ["keyboard", "laptop"]
+  },
+  "book": {
+    "name": "Book",
+    "category": "Stationery & Media",
+    "description": "A bound set of printed pages containing text or images, used for reading and reference.",
+    "similar_items": ["vase", "clock"]
+  },
+  "clock": {
+    "name": "Clock",
+    "category": "Home Accessory",
+    "description": "A device used to measure and display the current time.",
+    "similar_items": ["remote", "cell phone"]
+  },
+  "vase": {
+    "name": "Vase",
+    "category": "Home Decor",
+    "description": "A decorative container, typically made of glass or ceramic, used to display flowers.",
+    "safety_warning": "Fragile — handle with care. Do not place where it can be easily knocked over.",
+    "similar_items": ["potted plant", "bowl", "cup"]
+  },
+  "potted plant": {
+    "name": "Potted Plant",
+    "category": "Home Decor",
+    "description": "A plant grown in a container indoors for decorative or air-purifying purposes.",
+    "safety_warning": "Some houseplants are toxic to pets and children. Verify the species before purchase.",
+    "similar_items": ["vase", "couch"]
+  },
+  "scissors": {
+    "name": "Scissors",
+    "category": "Stationery",
+    "description": "A cutting tool consisting of two sharp blades joined at a pivot point.",
+    "safety_warning": "Sharp blades — always pass handle-first. Keep away from children.",
+    "similar_items": ["knife", "fork"]
+  },
+  "teddy bear": {
+    "name": "Teddy Bear",
+    "category": "Toy",
+    "description": "A soft stuffed toy in the shape of a bear, commonly given to children.",
+    "safety_warning": "Check for loose parts (eyes, buttons) that could be a choking hazard for toddlers.",
+    "similar_items": ["book"]
+  },
+  "hair drier": {
+    "name": "Hair Dryer",
+    "category": "Personal Care Appliance",
+    "description": "An electric device that blows hot or warm air to dry and style hair.",
+    "safety_warning": "Never use near water or in a bathtub. Unplug after every use. Keep cord away from heat.",
+    "similar_items": ["toaster", "microwave"]
+  },
+  "toothbrush": {
+    "name": "Toothbrush",
+    "category": "Personal Hygiene",
+    "description": "A small brush used with toothpaste to clean teeth and gums.",
+    "safety_warning": "Replace every 3 months or after illness. Do not share toothbrushes.",
+    "similar_items": ["sink"]
+  },
+  "backpack": {
+    "name": "Backpack",
+    "category": "Bag",
+    "description": "A bag carried on the back using two shoulder straps, used for carrying belongings.",
+    "similar_items": ["handbag", "suitcase"]
+  },
+  "handbag": {
+    "name": "Handbag",
+    "category": "Bag",
+    "description": "A small bag carried by hand or over the shoulder, used to carry personal items.",
+    "similar_items": ["backpack", "suitcase"]
+  },
+  "suitcase": {
+    "name": "Suitcase",
+    "category": "Bag",
+    "description": "A large rectangular bag with a handle and wheels, used for travel and storing clothes.",
+    "similar_items": ["backpack", "handbag"]
+  },
+  "umbrella": {
+    "name": "Umbrella",
+    "category": "Accessory",
+    "description": "A folding canopy supported by a handle, used for protection against rain or sunlight.",
+    "similar_items": ["handbag", "backpack"]
+  },
+  "banana": {
+    "name": "Banana",
+    "category": "Food & Fruit",
+    "description": "A long curved yellow fruit with soft sweet flesh, rich in potassium and vitamins.",
+    "similar_items": ["apple", "orange"]
+  },
+  "apple": {
+    "name": "Apple",
+    "category": "Food & Fruit",
+    "description": "A round fruit with red, yellow, or green skin, known for its crisp texture and sweet flavour.",
+    "similar_items": ["orange", "banana"]
+  },
+  "orange": {
+    "name": "Orange",
+    "category": "Food & Fruit",
+    "description": "A citrus fruit with a bright orange peel, rich in vitamin C.",
+    "similar_items": ["apple", "banana"]
+  },
+  "broccoli": {
+    "name": "Broccoli",
+    "category": "Food & Vegetable",
+    "description": "A green cruciferous vegetable with a tree-like structure, rich in fibre and vitamins.",
+    "similar_items": ["carrot", "bowl"]
+  },
+  "carrot": {
+    "name": "Carrot",
+    "category": "Food & Vegetable",
+    "description": "A root vegetable, typically orange, known for its high beta-carotene content.",
+    "similar_items": ["broccoli", "bowl"]
+  },
+  "pizza": {
+    "name": "Pizza",
+    "category": "Food",
+    "description": "A flatbread dish topped with tomato sauce, cheese, and various toppings, then baked.",
+    "similar_items": ["sandwich", "hot dog", "cake"]
+  },
+  "sandwich": {
+    "name": "Sandwich",
+    "category": "Food",
+    "description": "A dish made of fillings such as meat, cheese, or vegetables placed between slices of bread.",
+    "similar_items": ["pizza", "hot dog"]
+  },
+  "hot dog": {
+    "name": "Hot Dog",
+    "category": "Food",
+    "description": "A cooked sausage served in a sliced bun, often garnished with condiments.",
+    "similar_items": ["sandwich", "pizza"]
+  },
+  "donut": {
+    "name": "Donut",
+    "category": "Food",
+    "description": "A sweet fried dough confection, usually ring-shaped and glazed or filled.",
+    "similar_items": ["cake", "pizza"]
+  },
+  "cake": {
+    "name": "Cake",
+    "category": "Food",
+    "description": "A sweet baked dessert made from flour, sugar, and eggs, often decorated with icing.",
+    "similar_items": ["donut", "pizza"]
+  },
+  "person": {
+    "name": "Person",
+    "category": "Human",
+    "description": "A human being detected in the scene.",
+    "similar_items": []
+  },
+  "bicycle": {
+    "name": "Bicycle",
+    "category": "Vehicle",
+    "description": "A human-powered two-wheeled vehicle propelled by pedalling.",
+    "safety_warning": "Always wear a helmet. Use lights and reflectors when cycling at night.",
+    "similar_items": ["motorcycle", "skateboard"]
+  },
+  "car": {
+    "name": "Car",
+    "category": "Vehicle",
+    "description": "A road vehicle powered by an engine, designed to carry passengers.",
+    "safety_warning": "Always wear a seatbelt. Do not use a mobile phone while driving.",
+    "similar_items": ["truck", "motorcycle", "bus"]
+  },
+  "motorcycle": {
+    "name": "Motorcycle",
+    "category": "Vehicle",
+    "description": "A two-wheeled motor vehicle, faster and more powerful than a bicycle.",
+    "safety_warning": "Wear a full-face helmet and protective gear at all times.",
+    "similar_items": ["bicycle", "car"]
+  },
+  "airplane": {
+    "name": "Airplane",
+    "category": "Vehicle",
+    "description": "A powered fixed-wing aircraft used for transporting passengers and cargo.",
+    "similar_items": ["train", "boat"]
+  },
+  "bus": {
+    "name": "Bus",
+    "category": "Vehicle",
+    "description": "A large motor vehicle designed to carry many passengers on a fixed route.",
+    "similar_items": ["truck", "car", "train"]
+  },
+  "train": {
+    "name": "Train",
+    "category": "Vehicle",
+    "description": "A series of connected carriages pulled by a locomotive along a railway track.",
+    "safety_warning": "Stand behind the yellow line on platforms. Do not cross railway tracks.",
+    "similar_items": ["bus", "car", "airplane"]
+  },
+  "truck": {
+    "name": "Truck",
+    "category": "Vehicle",
+    "description": "A large heavy-duty motor vehicle used for transporting goods and materials.",
+    "safety_warning": "Keep a safe following distance — trucks have large blind spots.",
+    "similar_items": ["car", "bus"]
+  },
+  "boat": {
+    "name": "Boat",
+    "category": "Vehicle",
+    "description": "A watercraft used for travel, fishing, or recreation on water.",
+    "safety_warning": "Always wear a life jacket when on open water.",
+    "similar_items": ["airplane", "train"]
+  },
+  "traffic light": {
+    "name": "Traffic Light",
+    "category": "Road Infrastructure",
+    "description": "A signalling device at road intersections that controls the flow of traffic using coloured lights.",
+    "similar_items": ["stop sign", "fire hydrant"]
+  },
+  "fire hydrant": {
+    "name": "Fire Hydrant",
+    "category": "Emergency Infrastructure",
+    "description": "A connection point on a water supply system used by firefighters to access water.",
+    "safety_warning": "Never park in front of a fire hydrant — it blocks emergency access.",
+    "similar_items": ["stop sign", "traffic light"]
+  },
+  "stop sign": {
+    "name": "Stop Sign",
+    "category": "Road Infrastructure",
+    "description": "A red octagonal road sign that requires drivers to come to a complete stop.",
+    "similar_items": ["traffic light", "parking meter"]
+  },
+  "parking meter": {
+    "name": "Parking Meter",
+    "category": "Road Infrastructure",
+    "description": "A device used to collect fees for parking a vehicle in a specific space for a limited time.",
+    "similar_items": ["stop sign", "traffic light"]
+  },
+  "bench": {
+    "name": "Bench",
+    "category": "Outdoor Furniture",
+    "description": "A long seat for multiple people, commonly found in parks, gardens, and public spaces.",
+    "similar_items": ["chair", "couch", "dining table"]
+  },
+  "bird": {
+    "name": "Bird",
+    "category": "Animal",
+    "description": "A warm-blooded vertebrate with feathers, wings, and a beak.",
+    "similar_items": ["cat", "dog"]
+  },
+  "cat": {
+    "name": "Cat",
+    "category": "Animal",
+    "description": "A small domesticated carnivorous mammal kept as a household pet.",
+    "safety_warning": "Wash hands after handling. Ensure vaccinations are up to date.",
+    "similar_items": ["dog", "bird", "teddy bear"]
+  },
+  "dog": {
+    "name": "Dog",
+    "category": "Animal",
+    "description": "A domesticated carnivorous mammal commonly kept as a loyal pet or working animal.",
+    "safety_warning": "Always keep on a lead in public areas. Ensure vaccinations are up to date.",
+    "similar_items": ["cat", "bird"]
+  },
+  "horse": {
+    "name": "Horse",
+    "category": "Animal",
+    "description": "A large hoofed mammal domesticated for riding, racing, and agricultural work.",
+    "safety_warning": "Approach horses calmly and from the front. Always wear a riding helmet.",
+    "similar_items": ["cow", "sheep"]
+  },
+  "sheep": {
+    "name": "Sheep",
+    "category": "Animal",
+    "description": "A domesticated ruminant mammal raised for wool, milk, and meat.",
+    "similar_items": ["cow", "horse"]
+  },
+  "cow": {
+    "name": "Cow",
+    "category": "Animal",
+    "description": "A large domesticated bovine animal raised for dairy products and beef.",
+    "similar_items": ["horse", "sheep"]
+  },
+  "elephant": {
+    "name": "Elephant",
+    "category": "Animal",
+    "description": "The world's largest land animal, with a distinctive trunk, large ears, and tusks.",
+    "similar_items": ["bear", "giraffe", "zebra"]
+  },
+  "bear": {
+    "name": "Bear",
+    "category": "Animal",
+    "description": "A large powerful mammal with thick fur, found in forests and mountains.",
+    "safety_warning": "Do not approach bears in the wild. Make noise to avoid surprising them.",
+    "similar_items": ["elephant", "teddy bear"]
+  },
+  "zebra": {
+    "name": "Zebra",
+    "category": "Animal",
+    "description": "An African equine with distinctive black-and-white striped markings.",
+    "similar_items": ["horse", "giraffe", "elephant"]
+  },
+  "giraffe": {
+    "name": "Giraffe",
+    "category": "Animal",
+    "description": "The tallest living terrestrial animal, native to African savanna.",
+    "similar_items": ["elephant", "zebra", "horse"]
+  },
+  "tie": {
+    "name": "Necktie",
+    "category": "Clothing Accessory",
+    "description": "A long piece of fabric worn around the neck, typically as part of formal attire.",
+    "similar_items": ["backpack", "handbag", "umbrella"]
+  },
+  "frisbee": {
+    "name": "Frisbee",
+    "category": "Sports Equipment",
+    "description": "A flat circular disc thrown between players as a sport or recreational activity.",
+    "similar_items": ["sports ball", "skateboard"]
+  },
+  "skis": {
+    "name": "Skis",
+    "category": "Sports Equipment",
+    "description": "Long flat runners attached to boots used for gliding over snow.",
+    "safety_warning": "Always wear a helmet and protective gear when skiing.",
+    "similar_items": ["snowboard", "surfboard"]
+  },
+  "snowboard": {
+    "name": "Snowboard",
+    "category": "Sports Equipment",
+    "description": "A single wide board used to slide down snow-covered slopes.",
+    "safety_warning": "Wear a helmet, wrist guards, and knee pads to prevent injury.",
+    "similar_items": ["skis", "skateboard", "surfboard"]
+  },
+  "sports ball": {
+    "name": "Sports Ball",
+    "category": "Sports Equipment",
+    "description": "A ball used in various sports such as football, basketball, or tennis.",
+    "similar_items": ["frisbee", "tennis racket", "baseball bat"]
+  },
+  "kite": {
+    "name": "Kite",
+    "category": "Toy / Outdoor",
+    "description": "A light frame covered with fabric or plastic flown in the wind on a string.",
+    "safety_warning": "Do not fly near power lines or in stormy weather.",
+    "similar_items": ["frisbee", "sports ball"]
+  },
+  "baseball bat": {
+    "name": "Baseball Bat",
+    "category": "Sports Equipment",
+    "description": "A smooth wooden or metal club used to hit a baseball in the sport of baseball.",
+    "safety_warning": "Use in designated areas only. Keep away from bystanders when swinging.",
+    "similar_items": ["baseball glove", "sports ball", "tennis racket"]
+  },
+  "baseball glove": {
+    "name": "Baseball Glove",
+    "category": "Sports Equipment",
+    "description": "A leather glove worn by fielders to catch and field baseballs.",
+    "similar_items": ["baseball bat", "sports ball"]
+  },
+  "skateboard": {
+    "name": "Skateboard",
+    "category": "Sports Equipment",
+    "description": "A short narrow board with wheels used for skateboarding tricks and transport.",
+    "safety_warning": "Always wear a helmet, knee pads, and wrist guards.",
+    "similar_items": ["snowboard", "surfboard", "bicycle"]
+  },
+  "surfboard": {
+    "name": "Surfboard",
+    "category": "Sports Equipment",
+    "description": "A long buoyant board used to ride ocean waves while standing.",
+    "safety_warning": "Never surf alone. Be aware of currents and other surfers.",
+    "similar_items": ["skateboard", "snowboard", "skis"]
+  },
+  "tennis racket": {
+    "name": "Tennis Racket",
+    "category": "Sports Equipment",
+    "description": "A handled frame strung with cord, used to strike a tennis ball.",
+    "similar_items": ["sports ball", "baseball bat", "frisbee"]
   }
 }
