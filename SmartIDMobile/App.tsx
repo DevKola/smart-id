@@ -174,6 +174,7 @@ export default function App(): React.JSX.Element {
       } as any);
 
       const response = await fetch(BACKEND_HTTP_URL, {
+
         method: 'POST',
         body: formData,
       });
