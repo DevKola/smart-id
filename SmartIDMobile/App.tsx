@@ -23,10 +23,10 @@ import { Camera as CameraIcon, RefreshCcw, SwitchCamera, AlertTriangle } from 'l
 // ─── Backend Configuration ───────────────────────────────────────────────────
 // 🔧 LOCAL DEV:  set IS_PRODUCTION = false, use your machine IP on the same WiFi
 // 🚀 PRODUCTION: set IS_PRODUCTION = true, then paste your Render URL below
-const IS_PRODUCTION = true;
+const IS_PRODUCTION = false;
 
 const PRODUCTION_URL = 'smart-id-kw68.onrender.com'; // ✅ Live Render deployment
-const LOCAL_HOST     = '192.168.1.100';                 // ← Replace with your machine's local IP (run `ifconfig`)
+const LOCAL_HOST     = '192.168.1.7';                   // ✅ Your machine's local IP
 const LOCAL_PORT     = '8000';
 
 const BACKEND_WS_URL  = IS_PRODUCTION
