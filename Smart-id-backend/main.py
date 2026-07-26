@@ -18,9 +18,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Auto-download yolov8n.pt if not present (e.g. on Render's ephemeral filesystem)
-MODEL_PATH = "yolov8n.pt"
-model = YOLO(MODEL_PATH)  # ultralytics will auto-download if the file is missing
+# Use ONNX model if available (3x faster than PyTorch on CPU-only servers like Render free tier)
+# To generate: run `python export_model.py` once locally, then commit yolov8n.onnx to git
+ONNX_PATH = "yolov8n.onnx"
+PT_PATH   = "yolov8n.pt"
+
+if os.path.exists(ONNX_PATH):
+    print(f"✅ Loading ONNX model ({ONNX_PATH}) — faster CPU inference")
+    model = YOLO(ONNX_PATH)
+else:
+    print(f"⚠️  ONNX model not found, falling back to PyTorch ({PT_PATH})")
+    model = YOLO(PT_PATH)  # ultralytics will auto-download if missing
+
+# Image size for inference — 320 is 4x faster than 640 on weak CPUs with minor accuracy loss
+INFER_SIZE = 320
 
 with open('database.json', 'r') as f:
     item_database = json.load(f)
@@ -35,7 +46,7 @@ def process_frame(contents: bytes):
 
         # Run prediction
         # verbose=False to keep the terminal output clean on every frame
-        results = model.predict(img, verbose=False)
+        results = model.predict(img, verbose=False, imgsz=INFER_SIZE)
         
         found_items = []
         
