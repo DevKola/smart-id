@@ -18,7 +18,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Use ONNX model if available (3x faster than PyTorch on CPU-only servers like Render free tier)
+# Use ONNX model if available (3x faster than PyTorch on CPU-only servers)
 # To generate: run `python export_model.py` once locally, then commit yolov8n.onnx to git
 ONNX_PATH = "yolov8n.onnx"
 PT_PATH   = "yolov8n.pt"
