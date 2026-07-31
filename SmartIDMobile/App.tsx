@@ -185,20 +185,20 @@ export default function App(): React.JSX.Element {
     }
   };
 
-  const pickTestImage = async () => {
-    const result = await launchImageLibrary({
-      mediaType: 'photo',
-      quality: 0.8,
-    });
+  // const pickTestImage = async () => {
+  //   const result = await launchImageLibrary({
+  //     mediaType: 'photo',
+  //     quality: 0.8,
+  //   });
     
-    if (result.assets && result.assets.length > 0) {
-      const uri = result.assets[0].uri;
-      if (uri) {
-        setSnapImageUri(uri);
-        await sendSnapToBackend(uri);
-      }
-    }
-  };
+  //   if (result.assets && result.assets.length > 0) {
+  //     const uri = result.assets[0].uri;
+  //     if (uri) {
+  //       setSnapImageUri(uri);
+  //       await sendSnapToBackend(uri);
+  //     }
+  //   }
+  // };
 
   const sendSnapToBackend = async (uri: string) => {
     try {
@@ -323,17 +323,16 @@ export default function App(): React.JSX.Element {
   }
 
   // No physical camera detected (e.g. simulator)
-  // Commented out so upload works on emulator without a camera
-  // if (device == null) {
-  //   return (
-  //     <View style={styles.container}>
-  //       <Text style={styles.text}>No Camera Detected on this Device</Text>
-  //       <Text style={styles.subText}>
-  //         A physical device with a camera is required to use Snap mode.
-  //       </Text>
-  //     </View>
-  //   );
-  // }
+  if (device == null) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.text}>No Camera Detected on this Device</Text>
+        <Text style={styles.subText}>
+          A physical device with a camera is required to use Snap mode.
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView 
@@ -348,20 +347,18 @@ export default function App(): React.JSX.Element {
         />
       }
     >
-      {/* Background layer: Either the snapped image OR a plain black bg (camera disabled for emulator testing) */}
+      {/* Background layer: Either the snapped image OR the live camera feed */}
       {snapImageUri ? (
         <Image source={{ uri: snapImageUri }} style={StyleSheet.absoluteFill} resizeMode="contain" />
       ) : (
-        // Camera view commented out for emulator testing — upload only
-        // <Camera
-        //   ref={camera}
-        //   style={StyleSheet.absoluteFill}
-        //   device={device}
-        //   isActive={true}
-        //   orientationSource="interface"
-        //   outputs={[photoOutput]}
-        // />
-        <View style={[StyleSheet.absoluteFill, { backgroundColor: '#111' }]} />
+        <Camera
+          ref={camera}
+          style={StyleSheet.absoluteFill}
+          device={device}
+          isActive={true}
+          orientationSource="interface"
+          outputs={[photoOutput]}
+        />
       )}
 
       {/* SVG Overlay for Bounding Boxes */}
@@ -422,9 +419,10 @@ export default function App(): React.JSX.Element {
       )}
 
       <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.uploadButtonSmall} onPress={pickTestImage}>
+        {/* Upload Photo button — disabled for physical device (emulator testing only) */}
+        {/* <TouchableOpacity style={styles.uploadButtonSmall} onPress={pickTestImage}>
           <Text style={styles.uploadButtonTextSmall}>Upload Photo</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         {/* Live AR Toggle Button (Pill at the top) */}
         <TouchableOpacity
@@ -441,7 +439,6 @@ export default function App(): React.JSX.Element {
         </TouchableOpacity>
 
         {/* Snap Photo button — capture with the device camera (Big Round Button) */}
-        {/* 
         <TouchableOpacity
           style={[styles.captureButton, isSnapping && styles.captureButtonActive]}
           onPress={snapImageUri ? clearSnap : snapPhoto}
@@ -463,7 +460,6 @@ export default function App(): React.JSX.Element {
               ? 'Tap to Retake' 
               : 'Tap to Snap Photo'}
         </Text>
-        */}
       </View>
 
       {/* The Animated Bottom Sheet */}
