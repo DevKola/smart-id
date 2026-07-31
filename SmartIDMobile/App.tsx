@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import {
   Camera,
+  CameraRef,
   useCameraDevice,
   useCameraPermission,
   usePhotoOutput,
@@ -20,13 +21,14 @@ import {
 } from 'react-native-vision-camera';
 import Svg, { Rect, Text as SvgText } from 'react-native-svg';
 import { Camera as CameraIcon, RefreshCcw, SwitchCamera, AlertTriangle } from 'lucide-react-native';
+import { launchImageLibrary } from 'react-native-image-picker';
 // ─── Backend Configuration ───────────────────────────────────────────────────
 // 🔧 LOCAL DEV:  set IS_PRODUCTION = false, use your machine IP on the same WiFi
-// 🚀 PRODUCTION: set IS_PRODUCTION = true, then paste your Render URL below
-const IS_PRODUCTION = false;
+// 🚀 PRODUCTION: set IS_PRODUCTION = true, then paste your Rwailway URL below
+const IS_PRODUCTION = true;
 
-const PRODUCTION_URL = 'smart-id-kw68.onrender.com'; // ✅ Live Render deployment
-const LOCAL_HOST     = '192.168.1.7';                   // ✅ Your machine's local IP
+const PRODUCTION_URL = 'smart-id-production.up.railway.app'; 
+const LOCAL_HOST     = '192.168.1.7';                  
 const LOCAL_PORT     = '8000';
 
 const BACKEND_WS_URL  = IS_PRODUCTION
@@ -75,7 +77,7 @@ interface ServerResponse {
 export default function App(): React.JSX.Element {
   const [cameraPosition, setCameraPosition] = useState<'back' | 'front'>('back');
   const device = useCameraDevice(cameraPosition);
-  const camera = useRef<Camera>(null);
+  const camera = useRef<CameraRef>(null);
   
   // Set resolution to VGA (640x480) because YOLO runs at 640. 
   // High res crashes WebSockets with huge base64 payloads!
@@ -166,7 +168,7 @@ export default function App(): React.JSX.Element {
     setIsSnapping(true);
 
     try {
-      const photo = await photoOutput.capturePhoto({ flash: 'off' }, {});
+      const photo = await photoOutput.capturePhoto({ flashMode: 'off' }, {});
       const path = await photo.saveToTemporaryFileAsync();
       photo.dispose();
 
@@ -180,6 +182,21 @@ export default function App(): React.JSX.Element {
       console.log('Snap failed', err);
     } finally {
       setIsSnapping(false);
+    }
+  };
+
+  const pickTestImage = async () => {
+    const result = await launchImageLibrary({
+      mediaType: 'photo',
+      quality: 0.8,
+    });
+    
+    if (result.assets && result.assets.length > 0) {
+      const uri = result.assets[0].uri;
+      if (uri) {
+        setSnapImageUri(uri);
+        await sendSnapToBackend(uri);
+      }
     }
   };
 
@@ -235,7 +252,7 @@ export default function App(): React.JSX.Element {
     }
 
     try {
-      const photo = await photoOutput.capturePhoto({ flash: 'off' }, {});
+      const photo = await photoOutput.capturePhoto({ flashMode: 'off' }, {});
       const path = await photo.saveToTemporaryFileAsync();
       photo.dispose();
 
@@ -306,16 +323,17 @@ export default function App(): React.JSX.Element {
   }
 
   // No physical camera detected (e.g. simulator)
-  if (device == null) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.text}>No Camera Detected on this Device</Text>
-        <Text style={styles.subText}>
-          A physical device with a camera is required to use Snap mode.
-        </Text>
-      </View>
-    );
-  }
+  // Commented out so upload works on emulator without a camera
+  // if (device == null) {
+  //   return (
+  //     <View style={styles.container}>
+  //       <Text style={styles.text}>No Camera Detected on this Device</Text>
+  //       <Text style={styles.subText}>
+  //         A physical device with a camera is required to use Snap mode.
+  //       </Text>
+  //     </View>
+  //   );
+  // }
 
   return (
     <ScrollView 
@@ -330,18 +348,20 @@ export default function App(): React.JSX.Element {
         />
       }
     >
-      {/* Background layer: Either the snapped image OR the live camera feed */}
+      {/* Background layer: Either the snapped image OR a plain black bg (camera disabled for emulator testing) */}
       {snapImageUri ? (
         <Image source={{ uri: snapImageUri }} style={StyleSheet.absoluteFill} resizeMode="contain" />
       ) : (
-        <Camera
-          ref={camera}
-          style={StyleSheet.absoluteFill}
-          device={device}
-          isActive={true}
-          photo={true}
-          outputs={[photoOutput]}
-        />
+        // Camera view commented out for emulator testing — upload only
+        // <Camera
+        //   ref={camera}
+        //   style={StyleSheet.absoluteFill}
+        //   device={device}
+        //   isActive={true}
+        //   orientationSource="interface"
+        //   outputs={[photoOutput]}
+        // />
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: '#111' }]} />
       )}
 
       {/* SVG Overlay for Bounding Boxes */}
@@ -402,36 +422,48 @@ export default function App(): React.JSX.Element {
       )}
 
       <View style={styles.buttonContainer}>
-        {/* Snap Photo button — capture with the device camera */}
+        <TouchableOpacity style={styles.uploadButtonSmall} onPress={pickTestImage}>
+          <Text style={styles.uploadButtonTextSmall}>Upload Photo</Text>
+        </TouchableOpacity>
+
+        {/* Live AR Toggle Button (Pill at the top) */}
         <TouchableOpacity
-          style={[styles.snapButton, isSnapping && styles.snapButtonActive]}
+          style={[styles.snapButton, isLiveScanning && styles.snapButtonActive]}
+          onPress={toggleScanning}
+          disabled={!wsConnected || !!snapImageUri || isSnapping}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <CameraIcon color="#fff" size={20} />
+            <Text style={styles.snapButtonText}>
+              {isLiveScanning ? 'Stop Live AR' : 'Start Live AR'}
+            </Text>
+          </View>
+        </TouchableOpacity>
+
+        {/* Snap Photo button — capture with the device camera (Big Round Button) */}
+        {/* 
+        <TouchableOpacity
+          style={[styles.captureButton, isSnapping && styles.captureButtonActive]}
           onPress={snapImageUri ? clearSnap : snapPhoto}
           disabled={isSnapping || isLiveScanning}
         >
           {isSnapping ? (
-            <ActivityIndicator size="small" color="#fff" />
+            <ActivityIndicator size="large" color="#a855f7" />
+          ) : snapImageUri ? (
+            <RefreshCcw color="#a855f7" size={32} />
           ) : (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              {snapImageUri ? <RefreshCcw color="#fff" size={20} /> : <CameraIcon color="#fff" size={20} />}
-              <Text style={styles.snapButtonText}>
-                {snapImageUri ? 'Retake' : 'Snap Photo'}
-              </Text>
-            </View>
+            <View style={styles.innerCaptureCircle} />
           )}
         </TouchableOpacity>
 
-        {/* Live AR scan button */}
-        <TouchableOpacity
-          style={[styles.captureButton, isLiveScanning && styles.captureButtonActive]}
-          onPress={toggleScanning}
-          disabled={!wsConnected}
-        >
-          <View style={[styles.innerCaptureCircle, isLiveScanning && styles.innerCaptureCircleActive]} />
-        </TouchableOpacity>
-
         <Text style={styles.instructionText}>
-          {isLiveScanning ? 'Tap to Stop Live AR' : 'Tap to Start Live AR'}
+          {isLiveScanning 
+            ? 'Live AR Active' 
+            : snapImageUri 
+              ? 'Tap to Retake' 
+              : 'Tap to Snap Photo'}
         </Text>
+        */}
       </View>
 
       {/* The Animated Bottom Sheet */}
@@ -498,7 +530,11 @@ export default function App(): React.JSX.Element {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000', justifyContent: 'center' },
   analyzingOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
     backgroundColor: 'rgba(0,0,0,0.55)',
     justifyContent: 'center',
     alignItems: 'center',
@@ -601,6 +637,18 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 15,
+  },
+  uploadButtonSmall: {
+    backgroundColor: 'rgba(168, 85, 247, 0.8)',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    marginBottom: 10,
+  },
+  uploadButtonTextSmall: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
   },
   instructionText: {
     color: '#fff',
