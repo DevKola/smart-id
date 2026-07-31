@@ -21,7 +21,6 @@ import {
 } from 'react-native-vision-camera';
 import Svg, { Rect, Text as SvgText } from 'react-native-svg';
 import { Camera as CameraIcon, RefreshCcw, SwitchCamera, AlertTriangle } from 'lucide-react-native';
-import { launchImageLibrary } from 'react-native-image-picker';
 // ─── Backend Configuration ───────────────────────────────────────────────────
 // 🔧 LOCAL DEV:  set IS_PRODUCTION = false, use your machine IP on the same WiFi
 // 🚀 PRODUCTION: set IS_PRODUCTION = true, then paste your Rwailway URL below
@@ -168,7 +167,7 @@ export default function App(): React.JSX.Element {
     setIsSnapping(true);
 
     try {
-      const photo = await photoOutput.capturePhoto({ flashMode: 'off' }, {});
+      const photo = await photoOutput.capturePhoto({ flashMode: 'off', photoOrientation: 'portrait' }, {});
       const path = await photo.saveToTemporaryFileAsync();
       photo.dispose();
 
@@ -349,7 +348,13 @@ export default function App(): React.JSX.Element {
     >
       {/* Background layer: Either the snapped image OR the live camera feed */}
       {snapImageUri ? (
-        <Image source={{ uri: snapImageUri }} style={StyleSheet.absoluteFill} resizeMode="contain" />
+        <View style={[StyleSheet.absoluteFill, styles.snapImageWrapper]}>
+          <Image
+            source={{ uri: snapImageUri }}
+            style={styles.snapImage}
+            resizeMode="contain"
+          />
+        </View>
       ) : (
         <Camera
           ref={camera}
@@ -424,27 +429,29 @@ export default function App(): React.JSX.Element {
           <Text style={styles.uploadButtonTextSmall}>Upload Photo</Text>
         </TouchableOpacity> */}
 
-        {/* Live AR Toggle Button (Pill at the top) */}
-        <TouchableOpacity
-          style={[styles.snapButton, isLiveScanning && styles.snapButtonActive]}
-          onPress={toggleScanning}
-          disabled={!wsConnected || !!snapImageUri || isSnapping}
-        >
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <CameraIcon color="#fff" size={20} />
-            <Text style={styles.snapButtonText}>
-              {isLiveScanning ? 'Stop Live AR' : 'Start Live AR'}
-            </Text>
-          </View>
-        </TouchableOpacity>
+        {/* Live AR Toggle Button (Pill at the top) — hidden while snapping */}
+        {!isSnapping && (
+          <TouchableOpacity
+            style={[styles.snapButton, isLiveScanning && styles.snapButtonActive]}
+            onPress={toggleScanning}
+            disabled={!wsConnected || !!snapImageUri}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <CameraIcon color="#fff" size={20} />
+              <Text style={styles.snapButtonText}>
+                {isLiveScanning ? 'Stop Live AR' : 'Start Live AR'}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        )}
 
         {/* Snap Photo button — capture with the device camera (Big Round Button) */}
         <TouchableOpacity
-          style={[styles.captureButton, isSnapping && styles.captureButtonActive]}
+          style={[styles.captureButton, (isSnapping || isSendingSnap) && styles.captureButtonActive]}
           onPress={snapImageUri ? clearSnap : snapPhoto}
-          disabled={isSnapping || isLiveScanning}
+          disabled={isSnapping || isLiveScanning || isSendingSnap}
         >
-          {isSnapping ? (
+          {isSnapping || isSendingSnap ? (
             <ActivityIndicator size="large" color="#a855f7" />
           ) : snapImageUri ? (
             <RefreshCcw color="#a855f7" size={32} />
@@ -456,9 +463,11 @@ export default function App(): React.JSX.Element {
         <Text style={styles.instructionText}>
           {isLiveScanning 
             ? 'Live AR Active' 
-            : snapImageUri 
-              ? 'Tap to Retake' 
-              : 'Tap to Snap Photo'}
+            : isSendingSnap
+              ? 'Analyzing...'
+              : snapImageUri 
+                ? 'Tap to Retake' 
+                : 'Tap to Snap Photo'}
         </Text>
       </View>
 
@@ -614,6 +623,16 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginTop: 8,
     paddingHorizontal: 40,
+  },
+  snapImageWrapper: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  snapImage: {
+    width: SCREEN_HEIGHT,  // swap width/height to fill portrait screen after rotation
+    height: SCREEN_WIDTH,
+    transform: [{ rotate: '90deg' }],
   },
   snapButton: {
     backgroundColor: 'rgba(168, 85, 247, 0.85)',
