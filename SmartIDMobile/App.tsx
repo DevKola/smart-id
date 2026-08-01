@@ -429,21 +429,6 @@ export default function App(): React.JSX.Element {
           <Text style={styles.uploadButtonTextSmall}>Upload Photo</Text>
         </TouchableOpacity> */}
 
-        {/* Live AR Toggle Button (Pill at the top) — hidden while snapping */}
-        {!isSnapping && (
-          <TouchableOpacity
-            style={[styles.snapButton, isLiveScanning && styles.snapButtonActive]}
-            onPress={toggleScanning}
-            disabled={!wsConnected || !!snapImageUri}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <CameraIcon color="#fff" size={20} />
-              <Text style={styles.snapButtonText}>
-                {isLiveScanning ? 'Stop Live AR' : 'Start Live AR'}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        )}
 
         {/* Snap Photo button — capture with the device camera (Big Round Button) */}
         <TouchableOpacity
